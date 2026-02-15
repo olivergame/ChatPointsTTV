@@ -25,41 +25,42 @@ public class SpawnAction extends BaseAction {
         this.shouldGlow = shouldGlow;
     }
 
-@Override
-public void run() {
-    // If specific target player is set → spawn ONLY there
-    if (player != null) {
-        if (!player.isOnline()) {
-            ChatPointsTTV.log.warning("Couldn't find player " + player.getName() + ".");
+    @Override
+    public void run() {
+        // If specific target player is set → spawn ONLY there
+        if (player != null) {
+            if (!player.isOnline()) {
+                ChatPointsTTV.log.warning("Couldn't find player " + player.getName() + ".");
+                return;
+            }
+
+            for (int i = 0; i < amount; i++) {
+                Bukkit.getScheduler().runTask(ChatPointsTTV.getPlugin(), () -> {
+                    Entity e = player.getWorld().spawnEntity(player.getLocation(), entity);
+                    e.setGlowing(shouldGlow);
+                    if (name != null) {
+                        e.setCustomName(name);
+                        e.setCustomNameVisible(true);
+                    }
+                });
+            }
             return;
         }
 
+        // Otherwise spawn for players with target permission
         for (int i = 0; i < amount; i++) {
-            Bukkit.getScheduler().runTask(ChatPointsTTV.getPlugin(), () -> {
-                Entity e = player.getWorld().spawnEntity(player.getLocation(), entity);
-                e.setGlowing(shouldGlow);
-                if (name != null) {
-                    e.setCustomName(name);
-                    e.setCustomNameVisible(true);
-                }
-            });
-        }
-        return;
-    }
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                if (!p.hasPermission(permissions.TARGET.permission_id)) continue;
 
-    // Otherwise spawn for players with target permission
-    for (int i = 0; i < amount; i++) {
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            if (!p.hasPermission(permissions.TARGET.permission_id)) continue;
-
-            Bukkit.getScheduler().runTask(ChatPointsTTV.getPlugin(), () -> {
-                Entity e = p.getWorld().spawnEntity(p.getLocation(), entity);
-                e.setGlowing(shouldGlow);
-                if (name != null) {
-                    e.setCustomName(name);
-                    e.setCustomNameVisible(true);
-                }
-            });
+                Bukkit.getScheduler().runTask(ChatPointsTTV.getPlugin(), () -> {
+                    Entity e = p.getWorld().spawnEntity(p.getLocation(), entity);
+                    e.setGlowing(shouldGlow);
+                    if (name != null) {
+                        e.setCustomName(name);
+                        e.setCustomNameVisible(true);
+                    }
+                });
+            }
         }
     }
 }
